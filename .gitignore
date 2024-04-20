@@ -1,2 +1,4 @@
 Wave-U-Net-Pytorch/
 venv/
+DeepXi/
+*.wav

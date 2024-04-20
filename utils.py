@@ -23,6 +23,16 @@ def spectral_subtraction(noisy, alpha):
     return clean_audio
 
 
+def cut_audio_fn(audio, sr):
+    onset_strengths = librosa.onset.onset_strength(y=audio[0], sr=sr)
+    biggest_strength_idx = np.argmax(onset_strengths)
+    onset_time = librosa.frames_to_time(
+        biggest_strength_idx, sr=sr, hop_length=512)
+    cut_audio = audio[:, :int(onset_time * sr)]
+
+    return cut_audio
+
+
 def resample_audio(audio, sr, new_sr):
     return librosa.resample(audio, orig_sr=sr, target_sr=new_sr)
 
@@ -45,14 +55,13 @@ if __name__ == '__main__':
             alpha = float(argv[3])
             audio = spectral_subtraction(audio, alpha)
             file_name = f'{ file_name }_spectral'
+        elif type == 'cut':
+            cut_audio = cut_audio_fn(audio, sr)
+            file_name = f'{ file_name }_cut'
         elif type == 'extract_chan':
             audio, sr = librosa.load(f"{ file_name }.wav", sr=None, mono=False)
 
-            onset_strengths = librosa.onset.onset_strength(y=audio[0], sr=sr)
-            biggest_strength_idx = np.argmax(onset_strengths)
-            onset_time = librosa.frames_to_time(
-                biggest_strength_idx, sr=sr, hop_length=512)
-            cut_audio = audio[:, :int(onset_time * sr)]
+            cut_audio_fn(audio, sr)
 
             mean_am = np.mean(np.abs(cut_audio), axis=1)
             biggest_channels = np.argsort(mean_am)[::-1][:4]
