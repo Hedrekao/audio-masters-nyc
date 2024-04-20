@@ -1,5 +1,6 @@
 from ssspy.bss.ilrma import GaussILRMA as GaussILRMABase, TILRMA as TILRMABase, GGDILRMA as GGDILRMABase
 from tqdm.notebook import tqdm
+import numpy as np
 
 class GaussILRMA(GaussILRMABase):
     def __init__(self, *args, **kwargs):
@@ -57,3 +58,22 @@ class GGDILRMA(GGDILRMABase):
         super().update_once()
 
         self.progress_bar.update(1)
+
+def concatenate_arrays(*arrays):
+    # Determine the maximum dimension along the concatenation axis
+    max_dim = max(arr.shape[1] for arr in arrays)
+
+    # Pad or reshape each array to match the maximum dimension
+    padded_arrays = []
+    for arr in arrays:
+        if arr.shape[1] < max_dim:
+            pad_width = ((0, 0), (0, max_dim - arr.shape[1]))
+            arr_padded = np.pad(arr, pad_width, mode='constant', constant_values=0)
+            padded_arrays.append(arr_padded)
+        else:
+            padded_arrays.append(arr)
+
+    # Concatenate the modified arrays
+    result = np.concatenate(padded_arrays, axis=0)
+
+    return result

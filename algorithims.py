@@ -17,7 +17,7 @@ def get_best_channels(full_audio, sr):
 
     sorted_mean_amp = sorted(mean_am, reverse=True)
 
-    sorted_mean_amp = sorted_mean_amp[:4]
+    sorted_mean_amp = sorted_mean_amp[:16]
     highest_amp_indieces = [i for i,val in enumerate(mean_am) if val in sorted_mean_amp]
     highest_amp_indieces
 
@@ -37,7 +37,7 @@ def runGradICA(four_channels):
         )
 
         waveform_mix_whitened = whiten(four_channels)
-        return ica(waveform_mix_whitened, n_iter=500)
+        return ica(waveform_mix_whitened, n_iter=100)
 
 def runNaturalGradientDescentICA(four_channels):
     def contrast_fn(x):
@@ -50,7 +50,7 @@ def runNaturalGradientDescentICA(four_channels):
         contrast_fn=contrast_fn, score_fn=score_fn, is_holonomic=True
     )
 
-    return ica(four_channels, n_iter=500)
+    return ica(four_channels, n_iter=100)
 
 def runFastICA(four_channels):
     def contrast_fn(x):
@@ -116,7 +116,7 @@ def runNaturalGradFDICA(four_channels):
     )
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
-    spectrogram_est = fdica(spectrogram_mix, n_iter=500)
+    spectrogram_est = fdica(spectrogram_mix, n_iter=100)
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
 
     return waveform_est
@@ -158,7 +158,7 @@ def runGradBasedLaplaceFDICA(four_channels):
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
     spectrogram_mix_whitened = whiten(spectrogram_mix)
-    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=500)
+    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=100)
     spectrogram_est = projection_back(spectrogram_est, reference=spectrogram_mix)
 
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
@@ -175,7 +175,7 @@ def runNatGradBasedLaplaceFDICA(four_channels):
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
     spectrogram_mix_whitened = whiten(spectrogram_mix)
-    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=500)
+    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=100)
     spectrogram_est = projection_back(spectrogram_est, reference=spectrogram_mix)
 
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
@@ -192,7 +192,7 @@ def runAuxLaplaceFDICA(four_channels, ip):
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
     spectrogram_mix_whitened = whiten(spectrogram_mix)
-    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=500)
+    spectrogram_est = fdica(spectrogram_mix_whitened, n_iter=100)
     spectrogram_est = projection_back(spectrogram_est, reference=spectrogram_mix)
 
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
@@ -220,7 +220,7 @@ def runGradIVA(four_channels):
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
     spectrogram_mix_whitened = whiten(spectrogram_mix)
-    spectrogram_est = iva(spectrogram_mix_whitened, n_iter=500)
+    spectrogram_est = iva(spectrogram_mix_whitened, n_iter=100)
     spectrogram_est = projection_back(spectrogram_est, reference=spectrogram_mix)
 
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
@@ -283,13 +283,9 @@ def runFasterIVA(four_channels):
     def d_contrast_fn(y):
         return 2 * np.ones_like(y)
 
-    def dd_contrast_fn(y):
-        return 2 * np.zeros_like(y)
-
     iva = FasterIVA(
         contrast_fn=contrast_fn,
-        d_contrast_fn=d_contrast_fn,
-        dd_contrast_fn=dd_contrast_fn
+        d_contrast_fn=d_contrast_fn
     )
 
     _, _, spectrogram_mix = ss.stft(four_channels, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
@@ -441,13 +437,13 @@ def run_t_ILRMA(four_channels, spatial, source):
 
     return waveform_est
 
-def runGGDILRMA(four_channels, spatial, source):
+def runGGDILRMA(four_channels, spatial):
     n_fft, hop_length = 4096, 2048
 
     ilrma = GGDILRMA(
         n_basis=8,
         beta=1.95,
-        spatial_algorithm="IP1",  # IP1/IP2/ISS1/ISS2/IPA.
+        spatial_algorithm=spatial,  # IP1/IP2/ISS1/ISS2/IPA.
         domain=2,
         partitioning=True,  # w/ partitioning function
         normalization=False,
@@ -459,3 +455,4 @@ def runGGDILRMA(four_channels, spatial, source):
     _, waveform_est = ss.istft(spectrogram_est, window="hann", nperseg=n_fft, noverlap=n_fft-hop_length)
 
     return waveform_est
+
