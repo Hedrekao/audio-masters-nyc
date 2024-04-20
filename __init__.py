@@ -1,0 +1,1 @@
+from msica import main
