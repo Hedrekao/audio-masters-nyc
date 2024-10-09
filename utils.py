@@ -70,3 +70,24 @@ if __name__ == '__main__':
             file_name = f'{ file_name }_4chan'
 
     save_audio(audio, file_name, sr)
+
+
+def get_best_channels_ampl(audios, clean_audio):
+
+    print(clean_audio.shape[1])
+
+    mean_ampl = []
+
+    # concatenated audio channels
+
+    for chan in audios:
+        print(chan.shape)
+        try:
+            short_chan = chan[clean_audio.shape[1]]
+            mean_ampl.append(np.mean(np.abs(short_chan)))
+        except BaseException:
+            pass
+
+    # get top 1 channels with highest ampl
+    best_channel_idx = np.argmax(mean_ampl)
+    return audios[best_channel_idx]

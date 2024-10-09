@@ -1,11 +1,10 @@
-import librosa
 import numpy as np
 import scipy.signal as ss
 from ssspy.bss.fdica import NaturalGradFDICA
 from ssspy.bss.ica import NaturalGradICA
 
 
-def fdica(audio, n_fft=4096, hop_length=2048, n_iter=150):
+def fdica(audio, n_fft=1024, hop_length=512, n_iter=300):
 
     def contrast_fn(y):
         return 2 * np.abs(y)
@@ -46,33 +45,9 @@ def ica(audio):
     return waveform_est
 
 
-def main(audio_name, n_iter=1):
-    audio, sr = librosa.load(audio_name, sr=None, mono=False)
+def msica(audio, n_iter=1):
 
-    print(audio.shape)
-    # audio = librosa.resample(audio, orig_sr=sr, target_sr=16000)
-    # print(audio.shape)
+    audio = fdica(audio)
+    audio = ica(audio)
 
-    # sr = 16000
-
-    onset_strengths = librosa.onset.onset_strength(y=audio[0], sr=sr)
-
-    biggest_strength_idx = np.argmax(onset_strengths)
-
-    onset_time = librosa.frames_to_time(
-        biggest_strength_idx, sr=sr, hop_length=512)
-
-    cut_audio = audio[:, :int(onset_time * sr)]
-
-    mean_am = np.mean(np.abs(cut_audio), axis=1)
-    biggest_channels = np.argsort(mean_am)[::-1][:4]
-
-    audio = audio[biggest_channels]
-
-    print(audio.shape)
-    for _ in range(n_iter):
-
-        audio = fdica(audio)
-        audio = ica(audio)
-
-    return audio, sr
+    return audio

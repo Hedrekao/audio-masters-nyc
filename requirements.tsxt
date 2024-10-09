@@ -4,4 +4,9 @@ matplotlib
 numpy
 scikit-learn
 ssspy
-
+tensorflow==2.15.0
+tensorflow-addons
+pysoundfile
+scipy
+openai
+pyht
